@@ -1,0 +1,12 @@
+{
+	"name": "sasl",
+	"version": "0.1.0",
+	"description": "Simple Authentication and Security Layer",
+	"url": "https://github.com/tong/sasl",
+	"license": "MIT",
+	"tags": ["sasl","authentication","security"],
+	"releasenote": "See CHANGELOG.md",
+	"contributors": ["tong"],
+	"classPath" : "src/",
+	"dependencies": {}
+}
