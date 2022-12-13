@@ -1,0 +1,25 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: krdlab/setup-haxe@v1.2.0
+        with:
+          haxe-version: 4.2.5
+      - name: Setup
+        run: |
+          haxelib dev sasl .
+          haxelib install test.hxml --always
+          haxelib install hxcpp
+          haxelib install hxnodejs
+          haxelib install utest
+      - name: Run unit tests
+        run: haxe test.hxml
+      - name: Build api xml
+        run: haxe doc.hxml

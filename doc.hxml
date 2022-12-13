@@ -1,0 +1,47 @@
+--no-output
+-lib sasl
+--macro include('sasl')
+-D doc-gen
+--each
+
+--next
+-cpp _
+-xml doc/cpp.xml
+
+--next
+-hl _
+-xml doc/hl.xml
+
+--next
+--interp
+-xml doc/interp.xml
+
+--next
+--jvm _
+-xml doc/jvm.xml
+
+--next
+-js _
+-xml doc/js.xml
+--next
+
+--next
+-js _
+-xml doc/node.xml
+-lib hxnodejs
+
+--next
+-lua _
+-xml doc/lua.xml
+
+--next
+-neko _
+-xml doc/neko.xml
+
+--next
+-php _
+-xml doc/php.xml
+
+--next
+-python _
+-xml doc/python.xml
