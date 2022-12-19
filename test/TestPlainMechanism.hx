@@ -14,8 +14,9 @@ class TestPlainMechanism extends utest.Test {
 		isNull( mech.createAuthenticationText( null, null, null ) );
 		isNull( mech.createAuthenticationText( null, null, '1234' ) );
 		isNull( mech.createAuthenticationText( null, 'user', '1234' ) );
-		isNull( mech.createAuthenticationText( 'example.com', null, '1234' ) );
-		equals( z+'user'+z+'1234', mech.createAuthenticationText( 'example.com', 'user', '1234' ) );
+		//isNull( mech.createAuthenticationText( 'example.com', null, '1234' ) );
+		equals('example.com'+z+'1234', mech.createAuthenticationText( 'example.com', null, '1234' ) );
+		equals('example.com'+z+'user'+z+'1234', mech.createAuthenticationText( 'example.com', 'user', '1234' ) );
 	}
 	
     function test_createChallengeResponse() {

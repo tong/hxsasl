@@ -24,6 +24,8 @@ class PlainMechanism implements Mechanism {
         //var z = String.fromCharCode( 0 );
 		//TODO authzid
 		//return '$z$authzid$z$password';
+        if(authzid == null)
+            return null;
         var b = new StringBuf();
 		b.add(String.fromCharCode(0));
         b.add(authzid);
