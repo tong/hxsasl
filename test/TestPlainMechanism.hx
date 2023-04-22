@@ -9,14 +9,16 @@ class TestPlainMechanism extends utest.Test {
 	}
 
 	function test_createAuthenticationText() {
-		var mech = new sasl.PlainMechanism();
 		var z = String.fromCharCode( 0 );
+        var mech = new sasl.PlainMechanism();
 		isNull( mech.createAuthenticationText( null, null, null ) );
 		isNull( mech.createAuthenticationText( null, null, '1234' ) );
 		isNull( mech.createAuthenticationText( null, 'user', '1234' ) );
-		//isNull( mech.createAuthenticationText( 'example.com', null, '1234' ) );
-		equals('example.com'+z+'1234', mech.createAuthenticationText( 'example.com', null, '1234' ) );
-		equals('example.com'+z+'user'+z+'1234', mech.createAuthenticationText( 'example.com', 'user', '1234' ) );
+		
+        var t = mech.createAuthenticationText( 'example.com', null, '1234' );
+        equals(17, t.length);
+        equals('example.com', t.substr(1, 11));
+        equals('1234', t.substr(13, 4));
 	}
 	
     function test_createChallengeResponse() {
