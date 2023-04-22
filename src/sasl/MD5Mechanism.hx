@@ -5,7 +5,7 @@ import haxe.crypto.Md5;
 import haxe.io.Bytes;
 
 /**
-	[DIGEST-MD5 SASL Mechanism](ftp://ietf.org//rfc/rfc2831.txt)
+	[DIGEST-MD5 SASL Mechanism](https://www.ietf.org/rfc/rfc2831.txt)
 */
 class MD5Mechanism implements Mechanism {
 

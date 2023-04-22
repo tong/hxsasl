@@ -1,7 +1,9 @@
 package sasl;
 
 /**
-	SASL mechanism.
+	Simple Authentication and Security Layer (SASL).
+
+    https://www.rfc-editor.org/rfc/rfc4422
 */
 interface Mechanism {
 
