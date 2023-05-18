@@ -6,7 +6,8 @@ import haxe.io.Bytes;
 
 /**
 	[DIGEST-MD5 SASL Mechanism](https://www.ietf.org/rfc/rfc2831.txt)
-*/
+**/
+@rfc(2831)
 class MD5Mechanism implements Mechanism {
 
 	public static inline var NAME = 'DIGEST-MD5';

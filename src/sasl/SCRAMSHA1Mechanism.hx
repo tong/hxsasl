@@ -14,6 +14,7 @@ using StringTools;
 
 	https://tools.ietf.org/html/rfc5802
 **/
+@rfc(5802)
 class SCRAMSHA1Mechanism implements Mechanism {
 
 	public static inline var NAME = 'SCRAM-SHA-1';

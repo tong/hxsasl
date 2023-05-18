@@ -6,7 +6,8 @@ package sasl;
 	Unlike many other SASL mechanisms, whose purpose is to authenticate and identify the user to a server, the purpose of this SASL mechanism is to allow the user to gain access to services or resources without requiring the user to establish or otherwise disclose their identity to the server.  That is, this mechanism provides an anonymous login method.
 
 	This mechanism does not provide a security layer.
-*/
+**/
+@rfc(4505)
 class AnonymousMechanism implements Mechanism {
 
 	public final name = "ANONYMOUS";

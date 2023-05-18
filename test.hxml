@@ -1,41 +1,7 @@
-# -main Unit
--lib sasl
--lib utest
+-x Unit
 -cp test
 -dce no
---each
-
---next
--x Unit
-
-# --next
-# -cpp test/bin/cpp
-
-#--next
-#-cs test/bin/cs
-
-#--next
-#-hl test/bin/unit.hl
-
-#--next
-#-java test/bin/java
-
-#--next
-#-js test/bin/unit.js
-
-#--next
-#-lua test/bin/unit.lua
-
-# --next
-# -neko test/bin/unit.n
-
-# --next
-# -js test/bin/unit.node.js
-# -lib hxnodejs
-
-# --next
-# -php test/bin/
-# -D php-front=unit.php
-
-# --next
-# -python test/bin/unit.py
+-lib sasl
+-lib utest
+-D no-deprecation-warnings
+-D message.reporting=pretty

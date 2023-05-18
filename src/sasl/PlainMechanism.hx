@@ -1,6 +1,6 @@
 package sasl;
 
-/*
+/**
 	[The PLAIN Simple Authentication and Security Layer (SASL) Mechanism](https://www.ietf.org/rfc/rfc4616.txt)
 
 	The PLAIN mechanism should not be used without adequate data security
@@ -9,11 +9,12 @@ package sasl;
 
 	By default, implementations SHOULD advertise and make use of the PLAIN
     mechanism only when adequate data security services are in place.
-*/
+**/
+@rfc(4616)
 class PlainMechanism implements Mechanism {
 
 	public final name = 'PLAIN';
-    
+
     public var useAuthcid : Bool;
 
 	public function new(useAuthcid = true) {
@@ -21,7 +22,6 @@ class PlainMechanism implements Mechanism {
     }
 
 	public function createAuthenticationText(authzid: String, authcid: String, password: String) : String {
-        //var z = String.fromCharCode( 0 );
 		//TODO authzid
 		//return '$z$authzid$z$password';
         if(authzid == null)
