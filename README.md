@@ -10,3 +10,5 @@ It decouples authentication mechanisms from application protocols, in theory all
 * [RFC 4505, ANONYMOUS mechanism](https://tools.ietf.org/html/rfc4505)
 * [RFC 4616, PLAIN mechanism](https://tools.ietf.org/html/rfc4616)
 * [RFC 5802, SCRAMSHA1 mechanism](https://tools.ietf.org/html/rfc5802)
+
+[![test](https://github.com/tong/hxsasl/actions/workflows/test.yml/badge.svg)](https://github.com/tong/hxsasl/actions/workflows/test.yml)
