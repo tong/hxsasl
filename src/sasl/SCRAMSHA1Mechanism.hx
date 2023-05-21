@@ -4,8 +4,8 @@ import haxe.crypto.Base64;
 import haxe.crypto.Hmac;
 import haxe.crypto.Sha1;
 import haxe.io.Bytes;
-import haxe.io.UInt8Array;
 import haxe.io.BytesBuffer;
+import haxe.io.UInt8Array;
 
 using StringTools;
 
@@ -35,38 +35,32 @@ class SCRAMSHA1Mechanism implements Mechanism {
 	public function new() {}
 
 	public function createAuthenticationText( username : String, host : String, password : String ) : String {
-
 		this.username = username;
 		//this.host = host;
 		this.password = password;
-
-		cnonce = createRandomNonce( 32 ); //TODO
+		cnonce = Std.string( haxe.crypto.Md5.encode( name + NAME ) ).substr( 0, 32 );//TODO
 		initialMessage = 'n=' + saslname( username ) + ',r=' + cnonce;
 		return GS2 + initialMessage;
 	}
 
 	public function createChallengeResponse( challenge : String ) : String {
-
-		var serverMessage = decodeBase64( challenge ).toString();
-		var ch = parseChallenge( serverMessage );
-
-		var snonce = ch.r;
+		final serverMessage = Base64.decode( challenge ).toString();
+		final ch = parseChallenge( serverMessage );
+		final snonce = ch.r;
 		if( !snonce.startsWith( cnonce ) )
 			throw 'invalid snonce';
-		var salt = decodeBase64( ch.s );
-		var iterations = ch.i;
-
-		var clientFinalMessageBare = 'c=biws,r='+snonce;
-		var saltedPassword = Hi( password, salt, iterations );
-		var clientKey = HMAC( saltedPassword, Bytes.ofString( CLIENT_KEY ) );
-		var serverKey = HMAC( saltedPassword, Bytes.ofString( SERVER_KEY ) );
-		var storedKey = H( clientKey );
-		var authMessage = Bytes.ofString( initialMessage + ',' + serverMessage + ',' + clientFinalMessageBare );
-		var clientSignature = HMAC( storedKey, authMessage );
-		var serverSignature = HMAC( serverKey, authMessage );
-		var clientProof = XOR( clientKey, clientSignature );
-		var response = clientFinalMessageBare + ',p=' + encodeBase64( clientProof );
-
+	    final salt = Base64.decode( ch.s );
+		final iterations = ch.i;
+		final clientFinalMessageBare = 'c=biws,r='+snonce;
+		final saltedPassword = Hi( password, salt, iterations );
+		final clientKey = HMAC( saltedPassword, Bytes.ofString( CLIENT_KEY ) );
+		final serverKey = HMAC( saltedPassword, Bytes.ofString( SERVER_KEY ) );
+		final storedKey = H( clientKey );
+	    final authMessage = Bytes.ofString( initialMessage + ',' + serverMessage + ',' + clientFinalMessageBare );
+		final clientSignature = HMAC( storedKey, authMessage );
+		final serverSignature = HMAC( serverKey, authMessage );
+	    final clientProof = XOR( clientKey, clientSignature );
+		final response = clientFinalMessageBare + ',p=' + Base64.encode( clientProof );
 		return response;
 	}
 
@@ -77,8 +71,7 @@ class SCRAMSHA1Mechanism implements Mechanism {
 
 	public static function parseChallenge( challenge : String ) : { r: String, s: String, i : Int } {
 		//var str = decodeBase64( challenge ).toString();
-		var res = { r: null, s: null, i: null };
-		var map = new Map<String,String>();
+		final res = { r: null, s: null, i: null };
 		for( e in challenge.split( "," ) ) {
 			var parts = e.split( "=" );
 			switch parts[0] {
@@ -90,21 +83,14 @@ class SCRAMSHA1Mechanism implements Mechanism {
 		return res;
 	}
 
-	function createRandomNonce( length : Int ) : String {
-		//TODO
-		return Std.string( haxe.crypto.Md5.encode( name + NAME ) ).substr( 0, length );
-	}
-
-	static inline function HMAC( key : Bytes, msg : Bytes ) : Bytes {
+	static inline function HMAC( key : Bytes, msg : Bytes ) : Bytes
 		return new Hmac( SHA1 ).make( key, msg );
-	}
 
-	static inline function H( msg : Bytes ) : Bytes {
+	static inline function H( msg : Bytes ) : Bytes
 		return Sha1.make( msg );
-	}
 
 	static function Hi( text : String, salt : Bytes, iterations : Int ) {
-		var buf = new BytesBuffer();
+		final buf = new BytesBuffer();
 		buf.add( salt );
 		buf.addByte( 0 );
 		buf.addByte( 0 );
@@ -120,32 +106,22 @@ class SCRAMSHA1Mechanism implements Mechanism {
 	}
 
 	static function XOR( a : Bytes, b : Bytes ) : Bytes {
-		var res = new BytesBuffer();
-		if( a.length > b.length ) {
+		final res = new BytesBuffer();
+		if( a.length > b.length )
 			for( i in 0...b.length ) res.addByte( a.get(i) ^ b.get(i) );
-		} else {
+		else
 			for( i in 0...a.length ) res.addByte( a.get(i) ^ b.get(i) );
-		}
 		return res.getBytes();
 	}
 
-	static inline function encodeBase64( buf : Bytes ) : String {
-		return Base64.encode( buf );
-	}
-
-	static inline function decodeBase64( str : String ) : Bytes {
-		return Base64.decode( str );
-	}
-
 	static function saslname( name : String ) : String {
-		var escaped = new Array<String>();
-		var curr = '';
+		final escaped = new Array<String>();
+		var cur = '';
 		for( i in 0...name.length ) {
-			curr = name.charAt( i );
-			switch curr {
+			switch cur = name.charAt( i ) {
 			case ',': escaped.push( '=2C' );
 			case '=': escaped.push( '=3D' );
-			default: escaped.push( curr );
+			default: escaped.push( cur );
 			}
 		}
 		return escaped.join( '' );
