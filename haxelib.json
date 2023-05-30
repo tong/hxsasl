@@ -2,7 +2,7 @@
 	"name": "sasl",
 	"version": "0.1.0",
 	"description": "Simple Authentication and Security Layer",
-	"url": "https://github.com/tong/sasl",
+	"url": "https://github.com/tong/hxsasl",
 	"license": "MIT",
 	"tags": ["sasl","authentication","security"],
 	"releasenote": "See CHANGELOG.md",
