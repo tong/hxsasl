@@ -3,15 +3,20 @@ name: test
 on:
   push:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        haxe:
+          - latest
+          - 4.3.1
     steps:
       - uses: actions/checkout@v3
       - uses: krdlab/setup-haxe@v1.5.0
-        with:
-          haxe-version: 4.3.1
       - name: Setup
         run: |
           haxelib dev sasl .
