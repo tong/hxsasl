@@ -21,6 +21,7 @@ jobs:
         run: |
           haxelib dev sasl .
           haxelib install hxcpp
+          haxelib install hxjava
           haxelib install hxnodejs
           haxelib install utest
       - name: Run unit tests
