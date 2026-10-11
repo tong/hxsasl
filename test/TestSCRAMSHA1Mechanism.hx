@@ -1,19 +1,20 @@
 import utest.Assert.*;
 import haxe.crypto.Base64;
 import haxe.io.Bytes;
+import sasl.SCRAMMechanism;
 import sasl.SCRAMSHA1Mechanism;
 
 class TestSCRAMSHA1Mechanism extends utest.Test {
 	var mech = new SCRAMSHA1Mechanism('f63fa22e4accf72ab91b2b59af83c545');
 
-	@:access(sasl.SCRAMSHA1Mechanism)
+	@:access(sasl.SCRAMMechanism)
 	function test_createAuthenticationText() {
 		equals('n,,n=user,r=f63fa22e4accf72ab91b2b59af83c545', mech.createAuthenticationText('user', null, 'password'));
 		equals('f63fa22e4accf72ab91b2b59af83c545', mech.cnonce);
 		equals('n=user,r=f63fa22e4accf72ab91b2b59af83c545', mech.initialMessage);
 	}
 
-	@:access(sasl.SCRAMSHA1Mechanism)
+	@:access(sasl.SCRAMMechanism)
 	function test_randomNonce() {
 		final a = new SCRAMSHA1Mechanism();
 		a.createAuthenticationText('user', null, 'password');
@@ -105,30 +106,30 @@ class TestSCRAMSHA1Mechanism extends utest.Test {
 	}
 
 	function test_parseChallenge() {
-		var c = SCRAMSHA1Mechanism.parseChallenge('r=0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df,s=5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H,i=4096');
+		var c = SCRAMMechanism.parseChallenge('r=0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df,s=5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H,i=4096');
 		equals('0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df', c.r);
 		equals('5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H', c.s);
 		equals(4096, c.i);
-		final c = SCRAMSHA1Mechanism.parseChallenge('r=abc=def,s=QSXCR+Q6sek8bf92==,i=4096');
+		final c = SCRAMMechanism.parseChallenge('r=abc=def,s=QSXCR+Q6sek8bf92==,i=4096');
 		equals('abc=def', c.r);
 		equals('QSXCR+Q6sek8bf92==', c.s);
 	}
 
-	@:access(sasl.SCRAMSHA1Mechanism)
+	@:access(sasl.SCRAMMechanism)
 	function test_createChallengeResponse() {
 		var password = 'test';
 
 		var initialMessage = 'n=user,r=f63fa22e4accf72ab91b2b59af83c545';
 		var serverMessage = Base64.decode('cj1mNjNmYTIyZTRhY2NmNzJhYjkxYjJiNTlhZjgzYzU0NTQ3ZTg0N2Q2LWUzOTgtNDA5ZC05OGRlLWZhNjI1MmU2ZjI5ZixzPTVqWjkvR2V4U1MzZkRwNC9QUVRjU0wwMWtaUlVSYTNILGk9NDA5Ng==')
 			.toString();
-		var ch = SCRAMSHA1Mechanism.parseChallenge(serverMessage);
+		var ch = SCRAMMechanism.parseChallenge(serverMessage);
 		var snonce = ch.r;
 		var clientFinalMessageBare = 'c=biws,r=' + snonce;
 
 		var salt = Base64.decode(ch.s);
 		var iterations = ch.i;
 
-		var saltedPassword = SCRAMSHA1Mechanism.Hi(password, salt, iterations);
+		var saltedPassword = mech.Hi(password, salt, iterations);
 		// trace( Base64.encode( saltedPassword ) );
 		equals('5reb7rJoBLb3oMtpz1kMpurP9yY=', Base64.encode(saltedPassword));
 
@@ -159,16 +160,16 @@ class TestSCRAMSHA1Mechanism extends utest.Test {
 			#end
 		 */
 
-		var clientKey = SCRAMSHA1Mechanism.HMAC(saltedPassword, Bytes.ofString(SCRAMSHA1Mechanism.CLIENT_KEY));
+		var clientKey = mech.HMAC(saltedPassword, Bytes.ofString(SCRAMMechanism.CLIENT_KEY));
 		equals('NLHNGsBTkyQdh6SGwtHvBG6/OM8=', Base64.encode(clientKey));
-		var serverKey = SCRAMSHA1Mechanism.HMAC(saltedPassword, Bytes.ofString(SCRAMSHA1Mechanism.SERVER_KEY));
+		var serverKey = mech.HMAC(saltedPassword, Bytes.ofString(SCRAMMechanism.SERVER_KEY));
 		equals('ZqjUswSIo0h+5epn1kAtKWu2JHc=', Base64.encode(serverKey));
 
-		var storedKey = SCRAMSHA1Mechanism.H(clientKey);
+		var storedKey = mech.H(clientKey);
 		equals('Retzkjz3oXdobOx5KDxWV8VZDTc=', Base64.encode(storedKey));
 
 		var authMessage = initialMessage + ',' + serverMessage + ',' + clientFinalMessageBare;
-		var clientSignature = SCRAMSHA1Mechanism.HMAC(storedKey, Bytes.ofString(authMessage));
+		var clientSignature = mech.HMAC(storedKey, Bytes.ofString(authMessage));
 
 		equals('yyjZ0d2iVQ4MSKL6GRcJS5SA1Wg=', Base64.encode(clientSignature));
 
