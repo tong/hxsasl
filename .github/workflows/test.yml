@@ -26,7 +26,19 @@ jobs:
           haxelib install hxjava
           haxelib install hxnodejs
           haxelib git utest https://github.com/haxe-utest/utest
-      - name: Run unit tests
+      - name: Setup HashLink
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download latest -R HaxeFoundation/hashlink -p '*-linux-amd64.tar.gz' -O - | tar xz -C "$RUNNER_TEMP"
+          HL_DIR=$(echo "$RUNNER_TEMP"/hashlink-*-linux-amd64)
+          echo "$HL_DIR" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$HL_DIR" >> "$GITHUB_ENV"
+      - name: Test interp
         run: haxe test.hxml
+      - name: Test node
+        run: haxe test/build.node.hxml
+      - name: Test hl
+        run: haxe test/build.hl.hxml
       - name: Build api xml
         run: haxe doc.hxml
