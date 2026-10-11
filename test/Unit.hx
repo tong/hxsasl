@@ -5,6 +5,7 @@ function main() {
 	runner.addCase(new TestMD5Mechanism());
 	runner.addCase(new TestPlainMechanism());
 	runner.addCase(new TestSCRAMSHA1Mechanism());
+	runner.addCase(new TestSCRAMSHA256Mechanism());
 	utest.ui.Report.create(runner);
 	runner.run();
 }
