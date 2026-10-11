@@ -4,7 +4,7 @@ import haxe.io.Bytes;
 import sasl.SCRAMSHA1Mechanism;
 
 class TestSCRAMSHA1Mechanism extends utest.Test {
-	var mech = new SCRAMSHA1Mechanism();
+	var mech = new SCRAMSHA1Mechanism('f63fa22e4accf72ab91b2b59af83c545');
 
 	@:access(sasl.SCRAMSHA1Mechanism)
 	function test_createAuthenticationText() {
@@ -13,11 +13,37 @@ class TestSCRAMSHA1Mechanism extends utest.Test {
 		equals('n=user,r=f63fa22e4accf72ab91b2b59af83c545', mech.initialMessage);
 	}
 
+	@:access(sasl.SCRAMSHA1Mechanism)
+	function test_randomNonce() {
+		final a = new SCRAMSHA1Mechanism();
+		a.createAuthenticationText('user', null, 'password');
+		final first = a.cnonce;
+		a.createAuthenticationText('user', null, 'password');
+		final b = new SCRAMSHA1Mechanism();
+		b.createAuthenticationText('user', null, 'password');
+		equals(24, first.length);
+		equals(-1, first.indexOf(','));
+		notEquals(first, a.cnonce);
+		notEquals(first, b.cnonce);
+		notEquals(a.cnonce, b.cnonce);
+	}
+
+	// https://www.rfc-editor.org/rfc/rfc5802#section-5
+	function test_rfc5802() {
+		final m = new SCRAMSHA1Mechanism('fyko+d2lbbFgONRv9qkxdawL');
+		equals('n,,n=user,r=fyko+d2lbbFgONRv9qkxdawL', m.createAuthenticationText('user', null, 'pencil'));
+		final challenge = Base64.encode(Bytes.ofString('r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=4096'));
+		equals('c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=', m.createChallengeResponse(challenge));
+	}
+
 	function test_parseChallenge() {
 		var c = SCRAMSHA1Mechanism.parseChallenge('r=0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df,s=5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H,i=4096');
 		equals('0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df', c.r);
 		equals('5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H', c.s);
 		equals(4096, c.i);
+		final c = SCRAMSHA1Mechanism.parseChallenge('r=abc=def,s=QSXCR+Q6sek8bf92==,i=4096');
+		equals('abc=def', c.r);
+		equals('QSXCR+Q6sek8bf92==', c.s);
 	}
 
 	@:access(sasl.SCRAMSHA1Mechanism)

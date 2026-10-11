@@ -31,13 +31,19 @@ class SCRAMSHA1Mechanism implements Mechanism {
 	var cnonce:String;
 	var initialMessage:String;
 
-	public function new() {}
+	/**
+		@param cnonce Client nonce; a fresh random nonce is generated per authentication if omitted (only set this for testing).
+	**/
+	public function new(?cnonce:String) {
+		this.cnonce = cnonce;
+	}
 
 	public function createAuthenticationText(username:String, host:String, password:String):String {
 		this.username = username;
 		// this.host = host;
 		this.password = password;
-		cnonce = Std.string(haxe.crypto.Md5.encode(name + NAME)).substr(0, 32); // TODO
+		if (cnonce == null || initialMessage != null)
+			cnonce = Base64.encode(randomBytes(18));
 		initialMessage = 'n=' + saslname(username) + ',r=' + cnonce;
 		return GS2 + initialMessage;
 	}
@@ -72,17 +78,45 @@ class SCRAMSHA1Mechanism implements Mechanism {
 		// var str = decodeBase64( challenge ).toString();
 		final res = {r: null, s: null, i: null};
 		for (e in challenge.split(",")) {
-			var parts = e.split("=");
-			switch parts[0] {
+			final i = e.indexOf("=");
+			if (i == -1)
+				continue;
+			final value = e.substr(i + 1);
+			switch e.substr(0, i) {
 				case 'r':
-					res.r = parts[1];
+					res.r = value;
 				case 's':
-					res.s = parts[1];
+					res.s = value;
 				case 'i':
-					res.i = Std.parseInt(parts[1]);
+					res.i = Std.parseInt(value);
 			}
 		}
 		return res;
+	}
+
+	/**
+		Returns `length` random bytes from the platform's secure random source,
+		falling back to `Std.random` (not secure) where none is available.
+	**/
+	static function randomBytes(length:Int):Bytes {
+		#if nodejs
+		return js.node.Crypto.randomBytes(length).hxToBytes();
+		#elseif js
+		final a = new js.lib.Uint8Array(length);
+		js.Syntax.code("globalThis.crypto.getRandomValues({0})", a);
+		return Bytes.ofData(a.buffer);
+		#elseif sys
+		if (sys.FileSystem.exists('/dev/urandom')) {
+			final i = sys.io.File.read('/dev/urandom');
+			final b = i.read(length);
+			i.close();
+			return b;
+		}
+		#end
+		final b = Bytes.alloc(length);
+		for (i in 0...length)
+			b.set(i, Std.random(256));
+		return b;
 	}
 
 	static inline function HMAC(key:Bytes, msg:Bytes):Bytes
