@@ -133,7 +133,7 @@ abstract class SCRAMMechanism implements Mechanism {
 		return null;
 	}
 
-	public static function parseChallenge(challenge:String):{r:String, s:String, i:Int} {
+	public static function parseChallenge(challenge:String):{r:String, s:String, i:Null<Int>} {
 		final attrs = parseAttributes(challenge);
 		return {r: attrs.get('r'), s: attrs.get('s'), i: attrs.exists('i') ? Std.parseInt(attrs.get('i')) : null};
 	}
