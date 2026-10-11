@@ -28,6 +28,13 @@ class AnonymousMechanism implements Mechanism {
 		return challengeResponse; // Not required
 	}
 
+	/**
+		This mechanism provides no server authentication.
+	**/
+	public function verifySuccess(data:String):Bool {
+		return true;
+	}
+
 	public function handleAuthenticationText(text:String):Array<String> {
 		return null;
 	}

@@ -37,6 +37,13 @@ class MD5Mechanism implements Mechanism {
 		return (c == null) ? "" : createResponse(host, serverType, username, c.realm, password, c.nonce);
 	}
 
+	/**
+		TODO: verify `rspauth`
+	**/
+	public function verifySuccess(data:String):Bool {
+		return true;
+	}
+
 	public function handleAuthenticationText(text:String):Array<String> {
 		// TODO
 		return null;

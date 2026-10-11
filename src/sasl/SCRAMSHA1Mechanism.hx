@@ -30,6 +30,8 @@ class SCRAMSHA1Mechanism implements Mechanism {
 	var password:String;
 	var cnonce:String;
 	var initialMessage:String;
+	var serverSignature:Bytes;
+	var verified = false;
 
 	/**
 		@param cnonce Client nonce; a fresh random nonce is generated per authentication if omitted (only set this for testing).
@@ -45,17 +47,43 @@ class SCRAMSHA1Mechanism implements Mechanism {
 		if (cnonce == null || initialMessage != null)
 			cnonce = Base64.encode(randomBytes(18));
 		initialMessage = 'n=' + saslname(username) + ',r=' + cnonce;
+		serverSignature = null;
+		verified = false;
 		return GS2 + initialMessage;
 	}
 
+	/**
+		Creates the client-final message from the server-first message.
+
+		Some servers send the server-final message as an additional challenge, which gets verified and answered with an empty response.
+
+		@throws sasl.Error If the server reported an error or sent invalid data
+	**/
 	public function createChallengeResponse(challenge:String):String {
-		final serverMessage = Base64.decode(challenge).toString();
-		final ch = parseChallenge(serverMessage);
-		final snonce = ch.r;
-		if (!snonce.startsWith(cnonce))
-			throw 'invalid snonce';
-		final salt = Base64.decode(ch.s);
-		final iterations = ch.i;
+		final serverMessage = decodeBase64(challenge).toString();
+		if (serverSignature != null) {
+			if (!(verified = verifyServerFinal(serverMessage)))
+				throw new Error('invalid server signature');
+			return '';
+		}
+		if (initialMessage == null)
+			throw new Error('authentication not started');
+		final attrs = parseAttributes(serverMessage);
+		if (attrs.exists('e'))
+			throw new Error('server error: ' + attrs.get('e'));
+		if (attrs.exists('m'))
+			throw new Error('unsupported mandatory extension');
+		final snonce = attrs.get('r');
+		if (snonce == null || snonce.length <= cnonce.length || !snonce.startsWith(cnonce))
+			throw new Error('invalid server nonce');
+		final s = attrs.get('s');
+		if (s == null || s.length == 0)
+			throw new Error('missing salt');
+		final salt = decodeBase64(s);
+		final i = attrs.get('i');
+		if (i == null || !~/^[1-9][0-9]{0,8}$/.match(i))
+			throw new Error('invalid iteration count');
+		final iterations = Std.parseInt(i);
 		final clientFinalMessageBare = 'c=biws,r=' + snonce;
 		final saltedPassword = Hi(password, salt, iterations);
 		final clientKey = HMAC(saltedPassword, Bytes.ofString(CLIENT_KEY));
@@ -63,10 +91,23 @@ class SCRAMSHA1Mechanism implements Mechanism {
 		final storedKey = H(clientKey);
 		final authMessage = Bytes.ofString(initialMessage + ',' + serverMessage + ',' + clientFinalMessageBare);
 		final clientSignature = HMAC(storedKey, authMessage);
-		final serverSignature = HMAC(serverKey, authMessage);
+		serverSignature = HMAC(serverKey, authMessage);
 		final clientProof = XOR(clientKey, clientSignature);
 		final response = clientFinalMessageBare + ',p=' + Base64.encode(clientProof);
 		return response;
+	}
+
+	/**
+		Verifies the server signature of the server-final message `v=…`.
+
+		Returns `false` if the signature does not match, the server reported an error, or no server-final message was received at all.
+	**/
+	public function verifySuccess(data:String):Bool {
+		if (data == null || data.length == 0 || data == '=')
+			return verified; // Server-final message already received as challenge
+		if (serverSignature == null)
+			return false;
+		return verified = try verifyServerFinal(decodeBase64(data).toString()) catch (e:Error) false;
 	}
 
 	public function handleAuthenticationText(text:String):Array<String> {
@@ -75,23 +116,28 @@ class SCRAMSHA1Mechanism implements Mechanism {
 	}
 
 	public static function parseChallenge(challenge:String):{r:String, s:String, i:Int} {
-		// var str = decodeBase64( challenge ).toString();
-		final res = {r: null, s: null, i: null};
-		for (e in challenge.split(",")) {
-			final i = e.indexOf("=");
+		final attrs = parseAttributes(challenge);
+		return {r: attrs.get('r'), s: attrs.get('s'), i: attrs.exists('i') ? Std.parseInt(attrs.get('i')) : null};
+	}
+
+	static function parseAttributes(message:String):Map<String, String> {
+		final attrs = new Map<String, String>();
+		for (e in message.split(',')) {
+			final i = e.indexOf('=');
 			if (i == -1)
 				continue;
-			final value = e.substr(i + 1);
-			switch e.substr(0, i) {
-				case 'r':
-					res.r = value;
-				case 's':
-					res.s = value;
-				case 'i':
-					res.i = Std.parseInt(value);
-			}
+			final key = e.substr(0, i);
+			if (!attrs.exists(key))
+				attrs.set(key, e.substr(i + 1));
 		}
-		return res;
+		return attrs;
+	}
+
+	function verifyServerFinal(message:String):Bool {
+		final attrs = parseAttributes(message);
+		if (attrs.exists('e') || !attrs.exists('v'))
+			return false;
+		return equals(decodeBase64(attrs.get('v')), serverSignature);
 	}
 
 	/**
@@ -139,6 +185,22 @@ class SCRAMSHA1Mechanism implements Mechanism {
 			ui = XOR(ui, ui1);
 		}
 		return ui;
+	}
+
+	static function decodeBase64(s:String):Bytes {
+		return try Base64.decode(s) catch (e) throw new Error('invalid base64', e);
+	}
+
+	/**
+		Constant time comparison.
+	**/
+	static function equals(a:Bytes, b:Bytes):Bool {
+		if (a.length != b.length)
+			return false;
+		var d = 0;
+		for (i in 0...a.length)
+			d |= a.get(i) ^ b.get(i);
+		return d == 0;
 	}
 
 	static function XOR(a:Bytes, b:Bytes):Bytes {

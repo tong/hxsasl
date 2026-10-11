@@ -52,6 +52,13 @@ class PlainMechanism implements Mechanism {
 	}
 
 	/**
+		This mechanism provides no server authentication.
+	**/
+	public function verifySuccess(data:String):Bool {
+		return true;
+	}
+
+	/**
 		Parses a PLAIN message into `[authzid, authcid, password]`, with `authzid` being an empty string if absent.
 
 		Returns `null` if the message is malformed.

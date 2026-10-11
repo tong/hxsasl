@@ -36,6 +36,74 @@ class TestSCRAMSHA1Mechanism extends utest.Test {
 		equals('c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=', m.createChallengeResponse(challenge));
 	}
 
+	static final RFC_CNONCE = 'fyko+d2lbbFgONRv9qkxdawL';
+	static final RFC_SERVER_FIRST = 'r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=4096';
+	static final RFC_SERVER_FINAL = 'v=rmF9pqV8S7suAoZWja4dJRkFsKQ=';
+
+	static inline function b64(s:String):String
+		return Base64.encode(Bytes.ofString(s));
+
+	static function rfcMech():SCRAMSHA1Mechanism {
+		final m = new SCRAMSHA1Mechanism(RFC_CNONCE);
+		m.createAuthenticationText('user', null, 'pencil');
+		return m;
+	}
+
+	function test_verifySuccess() {
+		var m = rfcMech();
+		isFalse(m.verifySuccess(b64(RFC_SERVER_FINAL)), 'no server-first yet');
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		isTrue(m.verifySuccess(b64(RFC_SERVER_FINAL)));
+
+		m = rfcMech();
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		isFalse(m.verifySuccess(b64('v=AAAAAAAAAAAAAAAAAAAAAAAAAAA=')));
+
+		m = rfcMech();
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		isFalse(m.verifySuccess(b64('e=invalid-proof')));
+
+		m = rfcMech();
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		isFalse(m.verifySuccess(null), 'missing server-final');
+		isFalse(m.verifySuccess(''), 'missing server-final');
+		isFalse(m.verifySuccess('='), 'missing server-final');
+	}
+
+	function test_serverFinalAsChallenge() {
+		var m = rfcMech();
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		equals('', m.createChallengeResponse(b64(RFC_SERVER_FINAL)));
+		isTrue(m.verifySuccess(null));
+		isTrue(m.verifySuccess(''));
+
+		m = rfcMech();
+		m.createChallengeResponse(b64(RFC_SERVER_FIRST));
+		raises(() -> m.createChallengeResponse(b64('v=AAAAAAAAAAAAAAAAAAAAAAAAAAA=')), sasl.Error);
+		isFalse(m.verifySuccess(null));
+	}
+
+	function test_invalidServerFirst() {
+		for (msg in [
+			'e=other-error',
+			'm=ext,r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=4096',
+			's=QSXCR+Q6sek8bf92,i=4096',
+			'r=xxxx+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=4096',
+			'r=fyko+d2lbbFgONRv9qkxdawL,s=QSXCR+Q6sek8bf92,i=4096',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,i=4096',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=,i=4096',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=0',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=-1',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=4096x',
+			'r=fyko+d2lbbFgONRv9qkxdawL3rfc,s=QSXCR+Q6sek8bf92,i=9999999999',
+		]) {
+			final m = rfcMech();
+			raises(() -> m.createChallengeResponse(b64(msg)), sasl.Error, msg);
+		}
+		raises(() -> new SCRAMSHA1Mechanism().createChallengeResponse(b64(RFC_SERVER_FIRST)), sasl.Error, 'not started');
+	}
+
 	function test_parseChallenge() {
 		var c = SCRAMSHA1Mechanism.parseChallenge('r=0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df,s=5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H,i=4096');
 		equals('0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df', c.r);
