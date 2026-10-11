@@ -1,0 +1,3 @@
+test/unit.hxml
+-hl test/bin/unit.hl
+--cmd hl test/bin/unit.hl

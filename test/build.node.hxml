@@ -1,0 +1,4 @@
+test/unit.hxml
+-lib hxnodejs
+-js test/bin/unit.node.js
+--cmd node test/bin/unit.node.js
