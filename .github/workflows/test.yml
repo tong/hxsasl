@@ -13,17 +13,19 @@ jobs:
       matrix:
         haxe:
           - latest
-          - 4.3.4
+          - 4.3.7
     steps:
-      - uses: actions/checkout@v4
-      - uses: krdlab/setup-haxe@v1.5.1
+      - uses: actions/checkout@v7
+      - uses: krdlab/setup-haxe@v2.1.1
+        with:
+          haxe-version: ${{ matrix.haxe }}
       - name: Setup
         run: |
           haxelib dev sasl .
           haxelib install hxcpp
           haxelib install hxjava
           haxelib install hxnodejs
-          haxelib install utest
+          haxelib git utest https://github.com/haxe-utest/utest
       - name: Run unit tests
         run: haxe test.hxml
       - name: Build api xml
