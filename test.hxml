@@ -1,7 +1,2 @@
--x Unit
--cp test
--dce no
--lib sasl
--lib utest
--D no-deprecation-warnings
--D message.reporting=pretty
+test/unit.hxml
+--interp
