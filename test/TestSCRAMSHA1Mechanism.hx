@@ -105,6 +105,15 @@ class TestSCRAMSHA1Mechanism extends utest.Test {
 		raises(() -> new SCRAMSHA1Mechanism().createChallengeResponse(b64(RFC_SERVER_FIRST)), sasl.Error, 'not started');
 	}
 
+	@:access(sasl.SCRAMMechanism)
+	function test_saslprep() {
+		final m = new SCRAMSHA1Mechanism('abc');
+		equals('n,,n=IX=2Ca,r=abc', m.createAuthenticationText('\u2168,\u00AA', null, 'I\u00ADX'));
+		equals('IX', m.password);
+		raises(() -> new SCRAMSHA1Mechanism().createAuthenticationText('a\u0007', null, 'pencil'), sasl.Error);
+		raises(() -> new SCRAMSHA1Mechanism().createAuthenticationText('user', null, '\u0627a'), sasl.Error);
+	}
+
 	function test_parseChallenge() {
 		var c = SCRAMMechanism.parseChallenge('r=0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df,s=5jZ9/GexSS3fDp4/PQTcSL01kZRURa3H,i=4096');
 		equals('0efd61802e130ed7ad814e8d6e014b7ec06c328d-29ca-4530-adc7-2644abad33df', c.r);

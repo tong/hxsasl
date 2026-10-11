@@ -30,6 +30,14 @@ class TestPlainMechanism extends utest.Test {
 		isNull(new sasl.PlainMechanism('a' + NUL).createAuthenticationText('user', null, '1234'));
 	}
 
+	function test_saslprep() {
+		var mech = new sasl.PlainMechanism('\u2168');
+		equals('\u2168' + NUL + 'IX' + NUL + 'a b', mech.createAuthenticationText('I\u00ADX', null, 'a\u00A0b'));
+		equals(NUL + 'user' + NUL + 'pass\u{1F600}', new sasl.PlainMechanism().createAuthenticationText('user', null, 'pass\u{1F600}'));
+		isNull(new sasl.PlainMechanism().createAuthenticationText('\u00AD', null, '1234'), 'empty after preparation');
+		isNull(new sasl.PlainMechanism().createAuthenticationText('user', null, 'a\u0007b'), 'prohibited');
+	}
+
 	function test_createChallengeResponse() {
 		var mech = new sasl.PlainMechanism();
 		equals(null, mech.createChallengeResponse('challenge'));

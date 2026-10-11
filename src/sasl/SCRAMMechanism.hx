@@ -58,13 +58,24 @@ abstract class SCRAMMechanism implements Mechanism {
 		this.cnonce = cnonce;
 	}
 
+	/**
+		`username` and `password` are prepared with SASLprep.
+
+		Unassigned code points are allowed in both, also in the password which RFC 5802 treats as stored string,
+		as otherwise passwords containing characters newer than Unicode 3.2 (like emoji) could not be used at all.
+
+		@throws sasl.Error If `username` or `password` contains prohibited characters
+	**/
 	public function createAuthenticationText(username:String, host:String, password:String):String {
-		this.username = username;
-		// this.host = host;
-		this.password = password;
+		this.username = StringPrep.prep(username, {allowUnassigned: true});
+		this.password = StringPrep.prep(password, {allowUnassigned: true});
+		if (this.username == null)
+			throw new Error('invalid username');
+		if (this.password == null)
+			throw new Error('invalid password');
 		if (cnonce == null || initialMessage != null)
 			cnonce = Base64.encode(randomBytes(18));
-		initialMessage = 'n=' + saslname(username) + ',r=' + cnonce;
+		initialMessage = 'n=' + saslname(this.username) + ',r=' + cnonce;
 		serverSignature = null;
 		verified = false;
 		return GS2 + initialMessage;

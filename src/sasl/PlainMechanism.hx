@@ -31,17 +31,20 @@ class PlainMechanism implements Mechanism {
 	/**
 		Creates the message `[authzid] NUL authcid NUL passwd`.
 
-		Returns `null` if `username` or `password` is empty or any value contains a `NUL` character.
+		`username` and `password` are prepared with SASLprep, `authzid` is sent as is.
+
+		Returns `null` if `username` or `password` is empty or invalid, or `authzid` contains a `NUL` character.
 
 		@param username Authentication identity (authcid)
 		@param host Unused
 		@param password Password
 	**/
 	public function createAuthenticationText(username:String, host:String, password:String):String {
-		// TODO: string prep
-		if (!isValid(username) || !isValid(password) || (authzid != null && authzid.indexOf(NUL) != -1))
+		final authcid = StringPrep.prep(username, {allowUnassigned: true});
+		final passwd = StringPrep.prep(password, {allowUnassigned: true});
+		if (!isValid(authcid) || !isValid(passwd) || (authzid != null && authzid.indexOf(NUL) != -1))
 			return null;
-		return (authzid ?? '') + NUL + username + NUL + password;
+		return (authzid ?? '') + NUL + authcid + NUL + passwd;
 	}
 
 	/**
