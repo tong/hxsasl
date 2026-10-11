@@ -34,11 +34,16 @@ jobs:
           gh release download latest -R HaxeFoundation/hashlink -p '*-linux-amd64.tar.gz' -O - | tar xz -C "$RUNNER_TEMP"
           HL_DIR=$(echo "$RUNNER_TEMP"/hashlink-*-linux-amd64)
           echo "$HL_DIR" >> "$GITHUB_PATH"
+          echo "HL_DIR=$HL_DIR" >> "$GITHUB_ENV"
+          # Dependencies of fmt.hdll, which implements haxe.crypto on hl
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libpng16-16t64 libturbojpeg libvorbisfile3
       - name: Test interp
         run: haxe test.hxml
       - name: Test node
         run: haxe test/build.node.hxml
       - name: Test hl
-        run: haxe test/build.hl.hxml
+        # hdlls are loaded with dlopen and only found on the library path
+        run: LD_LIBRARY_PATH="$HL_DIR:$LD_LIBRARY_PATH" haxe test/build.hl.hxml
       - name: Build api xml
         run: haxe doc.hxml
