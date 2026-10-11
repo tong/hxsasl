@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         haxe:
           - latest
@@ -33,7 +34,6 @@ jobs:
           gh release download latest -R HaxeFoundation/hashlink -p '*-linux-amd64.tar.gz' -O - | tar xz -C "$RUNNER_TEMP"
           HL_DIR=$(echo "$RUNNER_TEMP"/hashlink-*-linux-amd64)
           echo "$HL_DIR" >> "$GITHUB_PATH"
-          echo "LD_LIBRARY_PATH=$HL_DIR" >> "$GITHUB_ENV"
       - name: Test interp
         run: haxe test.hxml
       - name: Test node
