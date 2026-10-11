@@ -12,38 +12,36 @@ package sasl;
 **/
 @rfc(4616)
 class PlainMechanism implements Mechanism {
+	static final NUL = String.fromCharCode(0);
+
 	public final name = 'PLAIN';
 
-	public var useAuthcid:Bool;
+	/**
+		Authorization identity to act as; omitted from the message if `null` or empty.
+	**/
+	public var authzid:String;
 
-	public function new(useAuthcid = true) {
-		this.useAuthcid = useAuthcid;
+	/**
+		@param authzid Authorization identity, only needed to act as a different identity than the authenticated one
+	**/
+	public function new(?authzid:String) {
+		this.authzid = authzid;
 	}
 
 	/**
-		@param authzid Authorization identity
-		@param authcid Authentication identity
+		Creates the message `[authzid] NUL authcid NUL passwd`.
+
+		Returns `null` if `username` or `password` is empty or any value contains a `NUL` character.
+
+		@param username Authentication identity (authcid)
+		@param host Unused
 		@param password Password
 	**/
-	public function createAuthenticationText(authzid:String, authcid:String, password:String):String {
-		if (authzid == null)
-			return null;
+	public function createAuthenticationText(username:String, host:String, password:String):String {
 		// TODO: string prep
-		// final authcid_p = StrinPrep.prep(authcid, true);
-		// final password_p = StrinPrep.prep(password, true);
-		// if(authcid_p == null || password_p == null
-		//     || authcid_p.length==0 || password_p.length==0)
-		//     return null;
-		final buf = new StringBuf();
-		buf.add(String.fromCharCode(0));
-		buf.add(authzid);
-		if (useAuthcid && authcid != null) {
-			buf.add(String.fromCharCode(0));
-			buf.add(authcid);
-		}
-		buf.add(String.fromCharCode(0));
-		buf.add(password);
-		return buf.toString();
+		if (!isValid(username) || !isValid(password) || (authzid != null && authzid.indexOf(NUL) != -1))
+			return null;
+		return (authzid ?? '') + NUL + username + NUL + password;
 	}
 
 	/**
@@ -53,11 +51,18 @@ class PlainMechanism implements Mechanism {
 		return null;
 	}
 
+	/**
+		Parses a PLAIN message into `[authzid, authcid, password]`, with `authzid` being an empty string if absent.
+
+		Returns `null` if the message is malformed.
+	**/
 	public function handleAuthenticationText(text:String):Array<String> {
 		if (text == null)
-			return [];
-		final a = text.split(String.fromCharCode(0));
-		a.shift();
-		return a;
+			return null;
+		final a = text.split(NUL);
+		return (a.length == 3 && a[1].length > 0 && a[2].length > 0) ? a : null;
 	}
+
+	static inline function isValid(s:String):Bool
+		return s != null && s.length > 0 && s.indexOf(NUL) == -1;
 }
