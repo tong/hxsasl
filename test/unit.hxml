@@ -3,5 +3,4 @@
 -lib sasl
 -lib utest
 -dce no
--D no-deprecation-warnings
 -D message.reporting=pretty
