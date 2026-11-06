@@ -11,6 +11,5 @@ It decouples authentication mechanisms from application protocols, in theory all
 * [RFC 4616, PLAIN mechanism](https://tools.ietf.org/html/rfc4616)
 * [RFC 5802, SCRAM-SHA-1 mechanism](https://tools.ietf.org/html/rfc5802)
 * [RFC 7677, SCRAM-SHA-256 mechanism](https://tools.ietf.org/html/rfc7677)
-* [RFC 2831, DIGEST-MD5 mechanism](https://tools.ietf.org/html/rfc2831) (deprecated, obsoleted by [RFC 6331](https://tools.ietf.org/html/rfc6331))
 
 [![test](https://github.com/tong/hxsasl/actions/workflows/test.yml/badge.svg)](https://github.com/tong/hxsasl/actions/workflows/test.yml) [![haxelib](https://img.shields.io/github/v/tag/tong/hxsasl.svg?colorA=F68712&colorB=141419&label=haxelib&style=flat-square)](http://lib.haxe.org/p/sasl/)
