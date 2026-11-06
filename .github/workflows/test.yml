@@ -37,7 +37,7 @@ jobs:
           echo "HL_DIR=$HL_DIR" >> "$GITHUB_ENV"
           # Dependencies of fmt.hdll, which implements haxe.crypto on hl
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends libpng16-16t64 libturbojpeg libvorbisfile3
+          sudo apt-get install -y -qq --no-install-recommends libpng16-16t64 libturbojpeg0 libvorbisfile3
       - name: Test interp
         run: haxe test.hxml
       - name: Test node
